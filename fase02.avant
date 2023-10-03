@@ -1,0 +1,5 @@
+takeoff
+move_to [0, 1, 0, w]
+escanea
+move_to [0, 0, 0, w]
+escanea

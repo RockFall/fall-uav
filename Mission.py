@@ -22,11 +22,14 @@ class Missao:
         if self.system == 'mavros':
             self.arm()
             self.set_flight_mode('GUIDED')
+        move = False
         for step in self.steps:
             if move:
                 waypoints = step
                 move = False
+                fw.clear_waypoints()
                 fw.set_waypoints(waypoints)
+                print("...Iniciado movimento")
                 fw.start_movement()
                 continue
             if step == 'takeoff':
@@ -107,14 +110,15 @@ class Missao:
 
 def help():
     print("Lista de comandos:")
+    print("go_back_TEMP - Volta ao inicio desta missao")
     print("start /- Inicia a missão (Takeoff -> Waypoints -> Landing)")
     print("takeoff /- Decola o drone")
+    print("land /- Pousa o drone")
+    print("stop /- Para o drone")
+    print("continue /- Continua a missão atual")
     print("setwaypoint x y z w /- Adiciona um novo waypoint")
     print("listwaypoints /- Lista os waypoints")
     print("clearwaypoints /- Limpa a lista de waypoints")
-    print("stop /- Para o drone")
-    print("continue /- Continua a missão atual")
-    print("land /- Pousa o drone")
     print("exit /- Sai do programa")
     print("help /- Mostra essa mensagem novamente")
     print("----------------------------")
@@ -124,28 +128,28 @@ if __name__ == '__main__':
     mission = Missao(
                 [
                     'takeoff',
-                    'move_to', [4.0, 0.0, 2.0, 1.57],
+                    'move_to', [[4.0, 0.0, 2.0, 1.57]],
                     'land',
                     'takeoff',
-                    'move_to', [1.5, 2.5, 2.0, 1.57],
+                    'move_to', [[1.5, 2.5, 2.0, 1.57]],
                     'land',
                     'takeoff',
-                    'move_to', [1.5, 5.5, 2.0, 1.57],
+                    'move_to', [[1.5, 5.5, 2.0, 1.57]],
                     'land',
                     'takeoff',
-                    'move_to', [0.0, 4.0, 2.0, 1.57],
+                    'move_to', [[0.0, 4.0, 2.0, 1.57]],
                     'land',
                     'takeoff',
-                    'move_to', [-1.5, 5.5, 2.0, 1.57],
+                    'move_to', [[-1.5, 5.5, 2.0, 1.57]],
                     'land',
                     'takeoff',
-                    'move_to', [-1.5, 2.5, 2.0, 1.57],
+                    'move_to', [[-1.5, 2.5, 2.0, 1.57]],
                     'land',
                     'takeoff',
-                    'move_to', [-4.0, 0.0, 2.0, 1.57],
+                    'move_to', [[-4.0, 0.0, 2.0, 1.57]],
                     'land',
                     'takeoff',
-                    'move_to', [0.0, 0.0, 2.0, 1.57],
+                    'move_to', [[0.0, 0.0, 2.0, 1.57]],
                     'land'
                     'takeoff'
                 ]
@@ -158,8 +162,11 @@ if __name__ == '__main__':
         cmd = input("c> ")
         if cmd == 'start':
             mission.start_mission(fw)
-
             print("Mission completed")
+        elif cmd == 'go_back_TEMP':
+            m2 = Missao(['move_to', [[0.0, 0.0, 2.0, 1.57]]], 'land')
+            m2.start_mission(FallWaypoints(type='goto'))
+            print("De volta ao inicio!")
         elif cmd == 'takeoff':
             mission.takeoff()
         elif cmd == 'setwaypoint':
