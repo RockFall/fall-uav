@@ -29,14 +29,14 @@ class FallWaypoints:
 
     def clear_waypoints(self):
         self.waypoints = []
+        self.current_waypoint_index = 0
 
     def start_movement(self):
-        rate = rospy.Rate(self.frequency)
         target_waypoint = self.waypoints[self.current_waypoint_index]
         last_distance_to_target = 0
         while not rospy.is_shutdown() and self.current_waypoint_index < len(self.waypoints) and not self.stopped:
             current_x, current_y, current_z = self.pose.pose.position.x, self.pose.pose.position.y, self.pose.pose.position.z
-            distance_to_target = ((target_waypoint[0] - current_x) ** 2 + (target_waypoint[1] - current_y) ** 2 + (target_waypoint[2] - current_z) ** 2) ** 0.5
+            #distance_to_target = ((target_waypoint[0] - current_x) ** 2 + (target_waypoint[1] - current_y) ** 2 + (target_waypoint[2] - current_z) ** 2) ** 0.5
 
             if self._reached_target(target_waypoint):
                 self.current_waypoint_index += 1
@@ -51,8 +51,6 @@ class FallWaypoints:
 
             #last_distance_to_target = distance_to_target
             
-            # TODO: Configurar orientação 'yaw'
-            #self.pose_pub.publish(pose)
             rospy.sleep(1.0)
 
     def _move_to(self, target):
@@ -65,7 +63,7 @@ class FallWaypoints:
     def _reached_target(self, target):
         current_x, current_y, current_z = self.pose.pose.position.x, self.pose.pose.position.y, self.pose.pose.position.z
         distance_to_target = ((target[0] - current_x) ** 2 + (target[1] - current_y) ** 2 + (target[2] - current_z) ** 2) ** 0.5
-        threshold = 1
+        threshold = 0.25 # TODO: Colocar como variavel da classe
         if distance_to_target < threshold:
             print("Chegou no waypoint:", target)
             return True  # O drone chegou ao destino
