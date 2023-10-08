@@ -1,0 +1,107 @@
+[
+    {
+        "action": "takeoff",
+        "params": {
+            "delay": 5
+        }
+    },
+    {
+        "action": "move_to",
+        "params": {
+            "waypoints": [[4.0, 0.0, 2.0, 1.57]]
+        }
+    },
+    {
+        "action": "land",
+        "params": {
+            "delay": 10
+        }
+    },
+    {
+        "action": "takeoff"
+    },
+    {
+        "action": "move_to",
+        "params": {
+            "waypoints": [[1.5, 2.5, 2.0, 1.57]]
+        }
+    },
+    {
+        "action": "land"
+    },
+    {
+        "action": "takeoff"
+    },
+    {
+        "action": "move_to",
+        "params": {
+            "waypoints": [[1.5, 5.5, 2.0, 1.57]]
+        }
+    },
+    {
+        "action": "land"
+    },
+    {
+        "action": "takeoff"
+    },
+    {
+        "action": "move_to",
+        "params": {
+            "waypoints": [[0.0, 4.0, 2.0, 1.57]]
+        }
+    },
+    {
+        "action": "land"
+    },
+    {
+        "action": "takeoff"
+    },
+    {
+        "action": "move_to",
+        "params": {
+            "waypoints": [[-1.5, 5.5, 2.0, 1.57]]
+        }
+    },
+    {
+        "action": "land"
+    },
+    {
+        "action": "takeoff"
+    },
+    {
+        "action": "move_to",
+        "params": {
+            "waypoints": [[-1.5, 2.5, 2.0, 1.57]]
+        }
+    },
+    {
+        "action": "land"
+    },
+    {
+        "action": "takeoff"
+    },
+    {
+        "action": "move_to",
+        "params": {
+            "waypoints": [[-4.0, 0.0, 2.0, 1.57]]
+        }
+    },
+    {
+        "action": "land"
+    },
+    {
+        "action": "takeoff"
+    },
+    {
+        "action": "move_to",
+        "params": {
+            "waypoints": [[0.0, 0.0, 2.0, 1.57]]
+        }
+    },
+    {
+        "action": "land"
+    },
+    {
+        "action": "takeoff"
+    }
+]
