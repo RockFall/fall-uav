@@ -1,7 +1,5 @@
 from Mission import Mission
 
-from fases import fase01, fase02
-
 def help():
     print("Lista de comandos:")
     print("reset - Volta ao inicio desta missao")

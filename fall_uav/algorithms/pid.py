@@ -1,5 +1,4 @@
 import numpy as np
-import math
 
 class PIDController:
     def __init__(self, kp, ki, kd, ki_sat, dt):

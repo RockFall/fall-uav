@@ -1,22 +1,18 @@
 # This class handles everything related to the movement of the drone
+from fall_uav.algorithms.pid import PIDController
+from fall_uav.controllers.navigation_controller.waypoint_manager import WaypointManager
+from fall_uav.robotics_api import RoboticsAPI
 
-import rospy
-from geometry_msgs.msg import Pose, PoseStamped, TwistStamped
-from mrs_msgs.srv import Vec4
-from mrs_msgs.msg import VelocityReferenceStamped
+class MotionController:
+    def __init__(self, robotics_api, pid_controller, waypoint_manager, rate = 10, dst_to_target_threshold=0.1, log=[]):
+        self.robotics_api = robotics_api  # instance of RoboticsAPI
+        self.pid_controller = pid_controller  # instance of PIDController
+        self.waypoint_manager = waypoint_manager  # instance of WaypointManager
 
-from fall_uav.controllers.navigation_controller.waypoint_manager import FallWaypoints
-from PIDController import PIDController
-import numpy as np
-
-class MovementController:
-    def __init__(self, namespace='/uav1', rate=10, system='mavros', dst_to_target_threshold=0.1, log=[]):
-        self.namespace = namespace
-        if system == 'mavros':
-            self.namespace = ''
+        self.rate = rate  # could use rospy.Rate(rate) if needed
+        self.dst_to_target_threshold = dst_to_target_threshold
         self.log = log
 
-        self.rate = rospy.Rate(rate)
         self.pose = PoseStamped()
 
         self.system = system

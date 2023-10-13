@@ -3,7 +3,7 @@
 
 # Lets change the waypoint array to be a queue
 
-class FallWaypoints:
+class WaypointManager:
     def __init__(self):
         self.waypoints = []
         self.current_waypoint_index = 0
