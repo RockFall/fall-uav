@@ -1,7 +1,7 @@
 from .ros.ros_api import ROS_API
 
 class RoboticsAPI:
-    def __init__(self, system_type, namespace='/uav1'):
+    def __init__(self, system_type, namespace='/uav1', pose_update=None, nav_data_update=None):
         self.system_type = system_type
         if system_type == 'ros':
             self.ros_api = ROS_API(system_type, namespace)
@@ -42,3 +42,7 @@ class RoboticsAPI:
     def update_pose(self):
         if self.system_type == 'ros':
             return self.ros_api.update_pose()
+        
+    def is_flying(self):
+        if self.system_type == 'ros':
+            return self.ros_api.is_flying()

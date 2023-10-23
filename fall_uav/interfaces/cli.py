@@ -1,4 +1,4 @@
-from ..mission_control import Mission
+from ..mission_control.mission import Mission
 
 def help():
     print("Lista de comandos:")
@@ -6,11 +6,6 @@ def help():
     print("start /- Inicia a missão (Takeoff -> Waypoints -> Landing)")
     print("takeoff /- Decola o drone")
     print("land /- Pousa o drone")
-    #print("stop /- Para o drone")
-    #print("continue /- Continua a missão atual")
-    #print("setwaypoint x y z w /- Adiciona um novo waypoint")
-    #print("listwaypoints /- Lista os waypoints")
-    #print("clearwaypoints /- Limpa a lista de waypoints")
     print("exit /- Sai do programa")
     print("help /- Mostra essa mensagem novamente")
     print("----------------------------")
@@ -27,7 +22,7 @@ if __name__ == '__main__':
 
         # -------- START COMMAND ------------
         if cmd == 'start':
-            mission.start_mission()
+            mission.execute()
             print("Mission completed")
 
         # -------- RESET COMMAND ------------
@@ -38,7 +33,7 @@ if __name__ == '__main__':
                 {"action": "land"}
             ]
             m = Mission(go_back_steps, file=False, system=SYSTEM_TYPE)
-            m.start_mission()
+            m.execute()
             print("De volta ao inicio!")
 
         # -------- TAKEOFF COMMAND ------------
@@ -47,7 +42,7 @@ if __name__ == '__main__':
                 {"action": "takeoff"}
             ]
             m = Mission(takeoff_step, file=False, system=SYSTEM_TYPE)
-            m.start_mission()
+            m.execute()
 
         # -------- LAND COMMAND ------------
         elif cmd == 'land':
@@ -55,7 +50,7 @@ if __name__ == '__main__':
                 {"action": "land"}
             ]
             m = Mission(land_step, file=False, system=SYSTEM_TYPE)
-            m.start_mission()
+            m.execute()
 
         elif cmd == 'exit':
             break

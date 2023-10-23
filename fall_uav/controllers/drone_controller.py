@@ -35,18 +35,19 @@ class DroneController:
         """
         self.robotics_api.sleep(seconds)
 
-    def setup(self):
-        if self.system == 'mavros':
-            self.arm()
-            self.set_flight_mode('GUIDED')
-
     def arm(self):
         """
-        The function "arm" calls the "arm" method from the "robotics_api" module.
+        The arm function arms the drone. This is a prerequisite for takeoff.
         """
         self.robotics_api.arm()
 
     def set_flight_mode(self, mode):
+        """
+        The set_flight_mode function sets the flight mode of the drone.
+        It can be:
+        - GUIDED
+        - ...
+        """
         self.robotics_api.set_flight_mode(mode)
 
     def takeoff(self):
@@ -69,7 +70,7 @@ class DroneController:
     def scan_QR(self):
         # Placeholder for scanning QR codes. This needs actual integration with camera systems.
         print("QR code scan...")
-        rospy.sleep(3)  # Assuming 3 seconds for scanning. Adjust this based on real timings.
+        self.robotics_api.sleep(3)  # Assuming 3 seconds for scanning. Adjust this based on real timings.
         print("You need to integrate with an actual QR code recognition system.")
 
     

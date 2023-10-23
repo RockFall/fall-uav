@@ -13,30 +13,49 @@ class MissionStep(Enum):
     CENTRALIZE = "centralize"
     SCAN_QR = "scan_qr"
     SLOW_DESCENT = "slow_descent"
+    ARM = "arm"
+    SET_FLIGHT_MODE = "set_flight_mode"
+    DISARM = "disarm"
 
 
 class Mission:
-    def __init__(self, steps_json, system='mavros', file=True, log=[]):
+    def __init__(self, steps_json, controller=None, file=True):
         # Get the steps from a json structure
         self.steps = steps_json
         if file:
             with open(steps_json, 'r') as file:
                 self.steps = json.load(file)
-        
-        # Set the system to be used (uav_manager or mavros)
-        self.system = system
 
         # Starting the DroneController
-        self.drone_controller = DroneController(system=system, log=log)
-
+        if controller is None:
+            self.drone_controller = DroneController(system='ros', log=[])
+        else:
+            self.drone_controller = controller
     
-    def start_mission(self):
+    def execute(self):
 
         self.drone_controller.setup()
 
         for step in self.steps:
             action = step.get('action')
             params = step.get('params', {})
+
+            # ========= ARM ==========
+            if action == MissionStep.ARM.value:
+                self.drone_controller.arm()
+                if 'delay' not in params:
+                    self.drone_controller.sleep(2.0)
+
+            # ========= DISARM ==========
+            elif action == MissionStep.DISARM.value:
+                self.drone_controller.disarm()
+                if 'delay' not in params:
+                    self.drone_controller.sleep(2.0)
+
+            # ========= SET_FLIGHT_MODE ==========
+            elif action == MissionStep.SET_FLIGHT_MODE.value:
+                mode = params.get('mode', 'GUIDED')
+                self.drone_controller.set_flight_mode(mode)
 
             # ======== TAKEOFF =========
             if action == MissionStep.TAKEOFF.value:
@@ -72,3 +91,16 @@ class Mission:
 
             if 'delay' in params:
                     self.drone_controller.sleep(params['delay'])
+
+
+    def add_step(self, action, params={}):
+        self.steps.append({"action": action, "params": params})
+
+    def print_steps(self):
+        print("Mission steps:")
+        # Pretty print of steps
+        idx=1
+        for step in self.steps:
+            print(f"{idx} - {step}")
+            idx += 1
+

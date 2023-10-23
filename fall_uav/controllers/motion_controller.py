@@ -1,6 +1,6 @@
 # This class handles everything related to the movement of the drone
 from fall_uav.algorithms.pid import PIDController
-from fall_uav.controllers.navigation_controller.waypoint_manager import WaypointManager
+from fall_uav.controllers.waypoint_manager import WaypointManager
 from fall_uav.robotics_api import RoboticsAPI
 
 class MotionController:

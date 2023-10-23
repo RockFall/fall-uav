@@ -25,44 +25,39 @@ from uav_msgs.srv import GetEuler
 from uav_msgs.srv import GetString
 
 class ROS_API:
-    def __init__(self, system_type, namespace='/uav1'):
+    def __init__(self, system_type, namespace='/uav1', realPoseCallback=None, navDataCallback=None):
         rospy.init_node('ros_api', anonymous=True)
 
+        # Context
         self.system_type = system_type
         self.namespace = namespace
+
         self.pose = PoseStamped()
         self.velocity = VelocityReferenceStamped()
-        self.pose_subscriber = rospy.Subscriber(namespace + '/odometry/odom_main', PoseStamped, self.pose_callback)
-        self.velocity_subscriber = rospy.Subscriber(namespace + '/control_manager/reference/velocity', VelocityReferenceStamped, self.velocity_callback)
-        self.pose_publisher = rospy.Publisher(namespace + '/control_manager/reference/pose', PoseStamped, queue_size=10)
-        self.velocity_publisher = rospy.Publisher(namespace + '/control_manager/reference/velocity', VelocityReferenceStamped, queue_size=10)
-        self.arm_service = rospy.ServiceProxy(namespace + '/control_manager/arm', Trigger)
-        self.disarm_service = rospy.ServiceProxy(namespace + '/control_manager/disarm', Trigger)
-        self.takeoff_service = rospy.ServiceProxy(namespace + '/control_manager/takeoff', Trigger)
-        self.land_service = rospy.ServiceProxy(namespace + '/control_manager/land', Trigger)
-        self.go_to_service = rospy.ServiceProxy(namespace + '/control_manager/goto', Vec4)
-        self.publish_velocity_service = rospy.ServiceProxy(namespace + '/control_manager/publish_velocity', Vec4)
-        self.set_flight_mode_service = rospy.ServiceProxy(namespace + '/control_manager/set_flight_mode', SetString)
-        self.get_flight_mode_service = rospy.ServiceProxy(namespace + '/control_manager/get_flight_mode', GetString)
-        self.get_odometry_service = rospy.ServiceProxy(namespace + '/odometry/get_odometry', GetOdometry)
-        self.get_position_service = rospy.ServiceProxy(namespace + '/odometry/get_position', GetPosition)
-        self.get_orientation_service = rospy.ServiceProxy(namespace + '/odometry/get_orientation', GetOrientation)
-        self.get_linear_velocity_service = rospy.ServiceProxy(namespace + '/odometry/get_linear_velocity', GetLinearVelocity)
-        self.get_angular_velocity_service = rospy.ServiceProxy(namespace + '/odometry/get_angular_velocity', GetAngularVelocity)
-        self.get_linear_acceleration_service = rospy.ServiceProxy(namespace + '/odometry/get_linear_acceleration', GetLinearAcceleration)
-        self.get_angular_acceleration_service = rospy.ServiceProxy(namespace + '/odometry/get_angular_acceleration', GetAngularAcceleration)
-        self.get_pose_service = rospy.ServiceProxy(namespace + '/odometry/get_pose', GetPose)
-        self.get_yaw_service = rospy.ServiceProxy(namespace + '/odometry/get_yaw', GetYaw)
-        self.get_quaternion_service = rospy.ServiceProxy(namespace + '/odometry/get_quaternion', GetQuaternion)
-        self.get_roll_service = rospy.ServiceProxy(namespace + '/odometry/get_roll', GetRoll)
-        self.get_pitch_service = rospy.ServiceProxy(namespace + '/odometry/get_pitch', GetPitch)
-        self.get_euler_service = rospy.ServiceProxy(namespace + '/odometry/get_euler', GetEuler)
+
+        # Services and topics paths
+        self.ARM_path = namespace + '/mavros/cmd/arming'
+        self.SET_MODE_path = namespace + '/mavros/set_mode'
+        self.TAKEOFF_path = namespace + '/mavros/cmd/takeoff'
+        self.LAND_path = namespace + '/mavros/cmd/land'
+        self.STATE_path = namespace + '/mavros/state'
+        self.POSE_path = namespace + '/mavros/local_position/pose'
+        self.VELOCITY_path = namespace + '/mavros/setpoint_velocity/cmd_vel'
         # ...
 
+        # Subscribers
+        self.pose_subscriber = rospy.Subscriber(self.POSE_path, PoseStamped, realPoseCallback)
+        self.odometry_subscriber = rospy.Subscriber(self.POSE_path, PoseStamped, navDataCallback)
+
+        self.flying = False
+
+    def is_flying(self):
+        return self.flying
+
     def arm(self):
-        rospy.wait_for_service(self.namespace + '/mavros/cmd/arming')
+        rospy.wait_for_service(self.ARM_SERVICE_path)
         try:
-            arm_service = rospy.ServiceProxy(self.namespace + '/mavros/cmd/arming', CommandBool)
+            arm_service = rospy.ServiceProxy(self.ARM_SERVICE_path, CommandBool)
             response = arm_service(True)
             if response.success:
                 rospy.loginfo("Drone armado com sucesso!")
@@ -72,9 +67,9 @@ class ROS_API:
             rospy.logerr("Erro ao chamar o serviço de armamento: %s" % e)
 
     def disarm(self):
-        rospy.wait_for_service(self.namespace + '/mavros/cmd/arming')
+        rospy.wait_for_service(self.ARM_SERVICE_path)
         try:
-            disarm_service = rospy.ServiceProxy(self.namespace + '/mavros/cmd/arming', CommandBool)
+            disarm_service = rospy.ServiceProxy(self.ARM_SERVICE_path, CommandBool)
             response = disarm_service(False)
             if response.success:
                 rospy.loginfo("Drone desarmado com sucesso!")
@@ -84,9 +79,9 @@ class ROS_API:
             rospy.logerr("Erro ao chamar o serviço de desarmamento: %s" % e)
 
     def set_flight_mode(self, mode):
-        rospy.wait_for_service(self.namespace + '/mavros/set_mode')
+        rospy.wait_for_service(self.SET_MODE_path)
         try:
-            set_mode_service = rospy.ServiceProxy(self.namespace + '/mavros/set_mode', SetMode)
+            set_mode_service = rospy.ServiceProxy(self.SET_MODE_path, SetMode)
             response = set_mode_service(custom_mode=mode)
             if response.mode_sent:
                 rospy.loginfo(f"Modo de voo alterado para '{mode}' com sucesso!")
@@ -95,47 +90,38 @@ class ROS_API:
         except rospy.ServiceException as e:
             rospy.logerr("Erro ao chamar o serviço de alteração de modo de voo: %s" % e)
 
-    def takeoff(self):
-        TARGET_HEIGHT_PICTURES = 3.0
+    def takeoff(self, altitude_passed=3.0):
+        if self.flying:
+            rospy.logwarn("Takeoff FAILED: O drone já está no ar")
+            return False
         try:
             print("\n----------Tentando decolar----------")
-            # TODO: Definir o uso de uav_manager vs mavros
-            if self.system == "uav_manager":
-                rospy.wait_for_service(self.namespace + '/uav_manager/takeoff')
-                takeoff_service = rospy.ServiceProxy(self.namespace + '/uav_manager/takeoff', Trigger)
-                response = takeoff_service.call()  # Altitude de decolagem em metros
-            elif self.system == "mavros":
-                rospy.wait_for_service(self.namespace + '/mavros/cmd/takeoff')
-                takeoff_service = rospy.ServiceProxy(self.namespace + '/mavros/cmd/takeoff', CommandTOL)
-                response = takeoff_service(altitude= TARGET_HEIGHT_PICTURES)
-            else:
-                raise Exception("Sistema de controle de voo não reconhecido (escolha mavros ou uav_control)")
+            rospy.wait_for_service(self.TAKEOFF_path)
+            takeoff_service = rospy.ServiceProxy(self.TAKEOFF_path, CommandTOL)
+            response = takeoff_service(altitude=altitude_passed, latitude = 0, longitude = 0, min_pitch = 0, yaw = 0)
             print('Takeoff response:', response)
             if not response.success:
-                print("Provavelmente o drone já está no ar\n")
-            return response.success
+                print("Provavelmente o drone já está no ar mas a variável self.flying estava incorreta\n")
+            self.flying = True
+            return True
         except rospy.ServiceException as e:
             rospy.logerr("Falha na decolagem: %s", str(e))
             return False
         
     def land(self):
+        if not self.flying:
+            rospy.logwarn("Land FAILED: O drone já está no chão")
+            return False
         try:
             print("\n----------Pousando----------")
-            # TODO: Definir o uso de uav_manager vs mavros
-            if self.system == "uav_manager":
-                rospy.wait_for_service(self.namespace + '/uav_manager/land')
-                landing_service = rospy.ServiceProxy(self.namespace + '/uav_manager/land', Trigger)
-                response = landing_service.call()
-            elif self.system == "mavros":
-                rospy.wait_for_service(self.namespace + '/mavros/cmd/land')
-                landing_service = rospy.ServiceProxy(self.namespace + '/mavros/cmd/land', CommandTOL)
-                response = landing_service(altitude=0.0)
-            else:
-                raise Exception("Sistema de controle de voo não reconhecido (escolha mavros ou uav_control)")
+            rospy.wait_for_service(self.LAND_path)
+            landing_service = rospy.ServiceProxy(self.LAND_path, CommandTOL)
+            response = landing_service(altitude=0.0)
             print('Landing response:', response)
             if not response.success:
                 print("Provavelmente o drone já está no chão\n")
-            return response.success
+            self.flying = False
+            return True
         except rospy.ServiceException as e:
             rospy.logerr("Falha no pouso: %s", str(e))
             return False
