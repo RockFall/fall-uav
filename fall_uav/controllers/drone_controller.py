@@ -12,7 +12,14 @@
 from .motion_controller import MotionController
 from ..robotics_api import RoboticsAPI
 
+
 class DroneController:
+    """
+    This class acts as the central class for all drone-relted operations
+    
+    It uses the RoboticsAPI class to abstract the system used (ROS, MRS, etc)
+    """
+
     def __init__(self, system='ros', log=[]):
         self.robotics_api = RoboticsAPI(system_type=system)
         self.movement_controller = MotionController(log=log, system=system, robotics_api=self.robotics_api)
@@ -20,6 +27,12 @@ class DroneController:
         self.log = log
 
     def sleep(self, seconds):
+        """
+        The sleep function pauses the execution of the program for a specified number of seconds.
+        
+        :param seconds: The "seconds" parameter is the number of seconds that the code should pause or
+        sleep for
+        """
         self.robotics_api.sleep(seconds)
 
     def setup(self):
@@ -28,6 +41,9 @@ class DroneController:
             self.set_flight_mode('GUIDED')
 
     def arm(self):
+        """
+        The function "arm" calls the "arm" method from the "robotics_api" module.
+        """
         self.robotics_api.arm()
 
     def set_flight_mode(self, mode):
